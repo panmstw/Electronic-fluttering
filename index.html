@@ -2,8 +2,8 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>電子撲滿 | 智能存錢罐</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>電子撲滿 | 智能存錢罐 · 雙色流水帳</title>
     <style>
         * {
             margin: 0;
@@ -14,7 +14,7 @@
 
         body {
             min-height: 100vh;
-            background: linear-gradient(145deg, #e0eafc 0%, #cfdef3 100%);
+            background: linear-gradient(145deg, #eef2f9 0%, #d9e2ef 100%);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -23,19 +23,19 @@
 
         /* 主卡片 */
         .piggy-card {
-            max-width: 560px;
+            max-width: 620px;
             width: 100%;
-            background: rgba(255, 255, 255, 0.9);
+            background: rgba(255, 255, 255, 0.96);
             backdrop-filter: blur(2px);
             border-radius: 3rem;
-            box-shadow: 0 25px 45px -12px rgba(0, 0, 0, 0.3), 0 2px 5px rgba(0,0,0,0.05);
+            box-shadow: 0 25px 45px -12px rgba(0, 0, 0, 0.25), 0 2px 8px rgba(0,0,0,0.03);
             overflow: hidden;
             transition: all 0.2s ease;
         }
 
         /* 撲滿頭部 icon + 餘額 */
         .hero-section {
-            background: linear-gradient(135deg, #2b3b4e 0%, #1d2c3a 100%);
+            background: linear-gradient(135deg, #243b4a 0%, #1b2c38 100%);
             padding: 2rem 2rem 1.8rem 2rem;
             text-align: center;
             color: white;
@@ -62,7 +62,7 @@
         .balance-amount {
             font-size: 3.3rem;
             font-weight: 800;
-            background: rgba(255,255,240,0.15);
+            background: rgba(255,255,245,0.12);
             display: inline-block;
             padding: 0.2rem 1.2rem;
             border-radius: 60px;
@@ -88,7 +88,7 @@
 
         .action-card {
             flex: 1;
-            background: #fefefe;
+            background: #ffffff;
             border-radius: 1.8rem;
             padding: 1.2rem 1rem 1.4rem;
             box-shadow: 0 8px 18px rgba(0, 0, 0, 0.05);
@@ -180,7 +180,7 @@
 
         /* 交易紀錄區塊 */
         .history-section {
-            padding: 0 1.8rem 2rem 1.8rem;
+            padding: 0 1.8rem 1.8rem 1.8rem;
         }
         .history-header {
             display: flex;
@@ -203,43 +203,62 @@
             color: #8c9aa8;
             font-size: 0.7rem;
             font-weight: 500;
-            padding: 0.2rem 0.8rem;
+            padding: 0.3rem 1rem;
             margin-top: 0;
             width: auto;
             background: #f0f3f8;
             border-radius: 2rem;
+            transition: all 0.2s;
         }
         .clear-btn:hover {
             background: #e2e8f0;
             color: #3a4c5e;
         }
         .transaction-list {
-            background: #f8fafd;
+            background: #f9fbfe;
             border-radius: 1.5rem;
-            padding: 0.2rem;
-            max-height: 280px;
+            padding: 0.3rem;
+            max-height: 300px;
             overflow-y: auto;
             box-shadow: inset 0 0 0 1px rgba(0,0,0,0.02), 0 2px 6px rgba(0,0,0,0.05);
         }
+        
+        /* 存入 & 取出 不同底色區分 - 核心視覺 */
         .tx-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 0.8rem 1rem;
-            border-bottom: 1px solid #e9edf2;
-            font-size: 0.85rem;
+            padding: 0.9rem 1rem;
+            border-radius: 1.2rem;
+            margin-bottom: 0.5rem;
+            transition: all 0.2s;
+            backdrop-filter: blur(2px);
         }
         .tx-item:last-child {
-            border-bottom: none;
+            margin-bottom: 0;
         }
+        
+        /* 存入專屬底色 (淡翠綠) */
+        .tx-deposit-bg {
+            background: rgba(44, 122, 77, 0.12);
+            border-left: 4px solid #2c7a4d;
+        }
+        
+        /* 取出專屬底色 (淡暖橘紅) */
+        .tx-withdraw-bg {
+            background: rgba(178, 60, 28, 0.1);
+            border-left: 4px solid #b23c1c;
+        }
+        
         .tx-type {
             display: flex;
             align-items: center;
             gap: 8px;
             font-weight: 600;
+            font-size: 0.9rem;
         }
         .type-deposit {
-            color: #2c7a4d;
+            color: #1f6e43;
         }
         .type-withdraw {
             color: #b23c1c;
@@ -248,22 +267,32 @@
             font-family: monospace;
             font-size: 0.7rem;
             color: #5f6c7a;
+            background: rgba(0,0,0,0.02);
+            padding: 0.2rem 0.5rem;
+            border-radius: 30px;
         }
         .tx-amount {
-            font-weight: 700;
+            font-weight: 800;
             font-size: 0.9rem;
+        }
+        .deposit-amount-color {
+            color: #1f8a4c;
+        }
+        .withdraw-amount-color {
+            color: #c23d1a;
         }
         .empty-history {
             text-align: center;
             padding: 2rem;
             color: #9aaebf;
             font-size: 0.8rem;
+            font-weight: 500;
         }
 
         footer {
             font-size: 0.65rem;
             text-align: center;
-            padding: 0.8rem;
+            padding: 0.9rem;
             color: #7e8c9e;
             border-top: 1px solid #eef2f8;
             background: #ffffffd9;
@@ -273,6 +302,8 @@
             body { padding: 1rem; }
             .balance-amount { font-size: 2.4rem; }
             .action-grid { flex-direction: column; }
+            .tx-item { flex-wrap: wrap; gap: 6px; }
+            .tx-date { order: 3; margin-left: auto; }
         }
     </style>
 </head>
@@ -280,12 +311,12 @@
 
 <div class="piggy-card">
     <div class="hero-section">
-        <div class="pig-icon">🐷💰</div>
-        <div class="balance-label">目前結餘總額</div>
+        <div class="pig-icon">🐷✨</div>
+        <div class="balance-label">📌 結餘總額</div>
         <div class="balance-amount">
             <span class="currency">$</span><span id="totalBalance">0</span>
         </div>
-        <div style="font-size: 0.7rem; margin-top: 12px; opacity: 0.7;">電子撲滿 · 智慧儲蓄</div>
+        <div style="font-size: 0.7rem; margin-top: 12px; opacity: 0.75;">電子撲滿 · 存入/取出不同底色</div>
     </div>
 
     <div class="action-grid">
@@ -326,25 +357,25 @@
         </div>
     </div>
 
-    <!-- 交易歷史記錄 -->
+    <!-- 交易歷史記錄 (雙色流水帳) -->
     <div class="history-section">
         <div class="history-header">
-            <h3>📋 收支明細</h3>
-            <button class="clear-btn" id="clearHistoryBtn">清除紀錄</button>
+            <h3>📋 收支明細 <span style="font-size:0.7rem; font-weight:normal;">💚存入｜❤️取出</span></h3>
+            <button class="clear-btn" id="clearHistoryBtn">🗑️ 清除紀錄</button>
         </div>
         <div class="transaction-list" id="transactionList">
-            <div class="empty-history">還沒有交易，試著存點錢吧 ✨</div>
+            <div class="empty-history">✨ 暫無交易，試著存第一筆錢 ✨</div>
         </div>
     </div>
     <footer>
-        ⚡ 存錢 / 取錢皆需設定對應日期 | 餘額即時更新
+        ⚡ 存錢 / 取錢需設定日期 | 不同底色區分收支 | 餘額即時更新
     </footer>
 </div>
 
 <script>
     // ---------- 資料儲存鍵值 ----------
-    const STORAGE_KEY_BALANCE = 'piggy_balance';
-    const STORAGE_KEY_TRANSACTIONS = 'piggy_transactions';
+    const STORAGE_KEY_BALANCE = 'piggy_balance_v2';
+    const STORAGE_KEY_TRANSACTIONS = 'piggy_transactions_v2';
 
     // ---------- 全域狀態 ----------
     let currentBalance = 0;           // 結餘總額 (數字)
@@ -391,33 +422,41 @@
         localStorage.setItem(STORAGE_KEY_TRANSACTIONS, JSON.stringify(transactions));
     }
 
-    // 重新渲染交易紀錄列表
+    // 渲染交易紀錄 ———— 不同底色區分存入/取出 (依照交易類型使用不同 class)
     function renderTransactions() {
         if (!transactionListDiv) return;
         
         if (transactions.length === 0) {
-            transactionListDiv.innerHTML = `<div class="empty-history">📭 尚無任何交易，新增一筆存錢吧～</div>`;
+            transactionListDiv.innerHTML = `<div class="empty-history">🐷 還沒有任何收支紀錄，開始存錢吧！</div>`;
             return;
         }
         
-        // 依照日期排序 (最新的在上，也可以timestamp新->舊)
+        // 依照時間戳記排序 (最新的在上方)
         const sorted = [...transactions].sort((a,b) => b.timestamp - a.timestamp);
         
         const itemsHTML = sorted.map(tx => {
             const isDeposit = tx.type === 'deposit';
-            const symbol = isDeposit ? '+ ' : '- ';
+            // 金額顯示與樣式
             const amountFormatted = Number(tx.amount).toLocaleString();
             const typeText = isDeposit ? '存入' : '取出';
             const typeClass = isDeposit ? 'type-deposit' : 'type-withdraw';
-            const dateDisplay = tx.date ? formatDate(tx.date) : '未記錄日期';
+            const dateDisplay = tx.date ? formatDate(tx.date) : '未標註日期';
+            
+            // 金額數字顏色另外控制
+            const amountColorClass = isDeposit ? 'deposit-amount-color' : 'withdraw-amount-color';
+            const amountSymbol = isDeposit ? '+ ' : '- ';
+            
+            // 關鍵: 根據交易類型綁定不同底色 class
+            const bgClass = isDeposit ? 'tx-deposit-bg' : 'tx-withdraw-bg';
+            
             return `
-                <div class="tx-item">
+                <div class="tx-item ${bgClass}">
                     <div class="tx-type ${typeClass}">
-                        <span>${isDeposit ? '🐖⬇️' : '🐖⬆️'}</span>
+                        <span>${isDeposit ? '🐖📥' : '🐖📤'}</span>
                         <span>${typeText}</span>
                     </div>
                     <div class="tx-date">📅 ${dateDisplay}</div>
-                    <div class="tx-amount ${typeClass}">${symbol} $${amountFormatted}</div>
+                    <div class="tx-amount ${amountColorClass}">${amountSymbol}$${amountFormatted}</div>
                 </div>
             `;
         }).join('');
@@ -443,7 +482,7 @@
             timestamp: Date.now()
         };
         transactions.push(transaction);
-        // 重新排序渲染
+        // 重新渲染 (應用雙底色)
         renderTransactions();
         persistData();
     }
@@ -456,14 +495,13 @@
             return;
         }
         const amount = Number(amountRaw);
-        if (isNaN(amount) || amount <= 0) {
-            alert("金額必須為正整數 (大於0)");
+        if (isNaN(amount) || amount <= 0 || !Number.isInteger(amount)) {
+            alert("金額必須為正整數 (例如: 100, 250)");
             return;
         }
         
         let depositDate = depositDateInput.value.trim();
         if (!depositDate) {
-            // 如果沒輸入日期，給予提醒但自動填入今天
             const today = new Date();
             const yyyy = today.getFullYear();
             const mm = String(today.getMonth() + 1).padStart(2, '0');
@@ -476,14 +514,12 @@
         currentBalance += amount;
         updateBalanceUI();
         
-        // 新增交易記錄
+        // 新增交易記錄 (存入)
         addTransaction('deposit', amount, depositDate);
         
-        // 清除存錢金額欄位，保留日期（方便連續存）
+        // 清除存錢金額欄位，方便連續存，保留日期
         depositAmountInput.value = "";
-        // 但日期可以保留剛剛使用的 (使用者體驗)
-        // 同時顯示成功輕提示 (不用alert可改用視覺回饋 但為了訊息清楚)
-        showTemporaryMsg(`✅ 成功存入 $${amount.toLocaleString()}`, '#2c7a4d');
+        showTemporaryMsg(`✅ 存入 $${amount.toLocaleString()} 到撲滿`, '#2c7a4d');
     }
 
     // 取錢主邏輯 (扣除)
@@ -494,8 +530,8 @@
             return;
         }
         const amount = Number(amountRaw);
-        if (isNaN(amount) || amount <= 0) {
-            alert("金額必須為正整數 (大於0)");
+        if (isNaN(amount) || amount <= 0 || !Number.isInteger(amount)) {
+            alert("金額必須為正整數 (例如: 50, 300)");
             return;
         }
         
@@ -518,37 +554,37 @@
         currentBalance -= amount;
         updateBalanceUI();
         
-        // 新增取錢記錄
+        // 新增取錢記錄 (取出)
         addTransaction('withdraw', amount, withdrawDate);
         
         // 清空取錢金額欄位
         withdrawAmountInput.value = "";
-        showTemporaryMsg(`🔽 已取出 $${amount.toLocaleString()}`, '#b23c1c');
+        showTemporaryMsg(`🔽 取出 $${amount.toLocaleString()}，已扣除餘額`, '#b23c1c');
     }
     
-    // 簡易浮動提示(友善非干擾)
+    // 簡易浮動提示 (非干擾)
     let toastTimeout = null;
     function showTemporaryMsg(message, colorHint) {
-        // 建立或複用一個toast元素
         let toast = document.getElementById('dynamicToast');
         if (!toast) {
             toast = document.createElement('div');
             toast.id = 'dynamicToast';
             toast.style.position = 'fixed';
-            toast.style.bottom = '20px';
+            toast.style.bottom = '24px';
             toast.style.left = '50%';
             toast.style.transform = 'translateX(-50%)';
             toast.style.backgroundColor = '#1e2f3e';
             toast.style.color = 'white';
-            toast.style.padding = '10px 20px';
-            toast.style.borderRadius = '40px';
+            toast.style.padding = '10px 22px';
+            toast.style.borderRadius = '60px';
             toast.style.fontSize = '0.85rem';
-            toast.style.fontWeight = '500';
+            toast.style.fontWeight = '600';
             toast.style.zIndex = '999';
-            toast.style.boxShadow = '0 6px 14px rgba(0,0,0,0.2)';
+            toast.style.boxShadow = '0 8px 18px rgba(0,0,0,0.2)';
             toast.style.backdropFilter = 'blur(8px)';
             toast.style.background = '#2b3b4ecc';
             toast.style.pointerEvents = 'none';
+            toast.style.fontFamily = 'inherit';
             document.body.appendChild(toast);
         }
         toast.style.background = colorHint ? `${colorHint}dd` : '#2b3b4ecc';
@@ -564,10 +600,10 @@
     // 清除所有交易紀錄 (保留餘額)
     function clearHistory() {
         if (transactions.length === 0) {
-            showTemporaryMsg('📭 紀錄已經是空的', '#5f6c7a');
+            showTemporaryMsg('📭 目前收支明細已經是空的', '#5f6c7a');
             return;
         }
-        const confirmClear = confirm('⚠️ 清除所有交易明細，但會保留目前餘額，確定繼續？');
+        const confirmClear = confirm('⚠️ 清除所有收支明細，但會保留目前結餘總額，確定繼續？');
         if (!confirmClear) return;
         
         transactions = [];   // 清空交易陣列
@@ -598,15 +634,10 @@
                 transactions = [];
             }
         } else {
-            // 加一筆歡迎示範交易 (自選: 可增加示例但不影響餘額? 但是為了乾淨體驗不加示範)
-            // 不過為讓用戶知道怎麼用，可以跳過示範保持空白歷史
             transactions = [];
         }
         
-        // 嚴謹檢查: 若餘額因某種原因與歷史總和不符可同步 (為避免手動編輯localStorage導致矛盾, 以餘額為主)
-        // 但可選擇重新校驗：計算交易總和與餘額是否一致? 為了可靠，提供一個可選修復? 但現有餘額優先，
-        // 若想更穩健可以同步校驗，因用戶也可能清除紀錄/保留餘額，所以餘額為最準確。
-        // 但仍可選用: 簡單檢查避免負數
+        // 確保餘額不為負數
         if (currentBalance < 0) currentBalance = 0;
         updateBalanceUI();
         renderTransactions();
@@ -622,17 +653,22 @@
         withdrawBtn.addEventListener('click', handleWithdraw);
         clearHistoryBtn.addEventListener('click', clearHistory);
         
-        // 如果用戶點擊日期欄位沒選，不會有強迫bug，保持彈性
-        // 當餘額變動與儲存一致
+        // 離開頁面時儲存
         window.addEventListener('beforeunload', () => {
             persistData();
         });
         
-        // 額外: 當輸入框失去焦點或手動調整，不再另外改預設; 但為了增加體驗，如果日期空白提示補值
-        // 在存錢和取錢的時候已經有補值機制
+        // 日期的即時小優化: 如果用戶誤觸清空日期，但點擊存/取時會自動補當天日期
+        // 另外如果金額欄位輸入負數，HTML5 number限制min=1依然可防呆但額外js確保
+        depositAmountInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') handleDeposit();
+        });
+        withdrawAmountInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') handleWithdraw();
+        });
     }
     
-    // 啟動
+    // 啟動應用程式
     init();
 </script>
 </body>
