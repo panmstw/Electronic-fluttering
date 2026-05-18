@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>電子撲滿 | 桌面應用版 · 固定視窗大小</title>
+    <title>電子撲滿｜智慧存錢罐 · 突顯取出紀錄</title>
     <style>
         * {
             margin: 0;
@@ -18,48 +18,22 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 1.5rem;
+            padding: 2rem;
+            /* 視窗大小會根據內容自動伸縮，不強制固定寬度 */
         }
 
-        /* 主要卡片 — 在電腦上固定視窗大小 (寬度固定，高度自然但限制最大高度) */
+        /* 主卡片：寬度由內容撐開，但設定適當最大寬度與舒適範圍 */
         .piggy-card {
-            width: 100%;
-            max-width: 520px;         /* 手機優先保持最大寬度 */
+            width: auto;
+            min-width: 360px;
+            max-width: 600px;
             background: rgba(255, 255, 255, 0.96);
             backdrop-filter: blur(2px);
             border-radius: 2.5rem;
-            box-shadow: 0 25px 45px -12px rgba(0, 0, 0, 0.35), 0 2px 8px rgba(0,0,0,0.05);
+            box-shadow: 0 25px 45px -12px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0,0,0,0.05);
             overflow: hidden;
             transition: all 0.2s ease;
-            /* 讓卡片在桌面上有固定感 */
             margin: 0 auto;
-        }
-
-        /* 桌面螢幕 (寬度 >= 640px) 固定視窗大小，更像應用程式 */
-        @media (min-width: 640px) {
-            body {
-                padding: 2rem;
-                background: #cbdbe6;  /* 穩重的桌面背景色 */
-            }
-            .piggy-card {
-                width: 500px;           /* 固定寬度 */
-                max-width: 500px;
-                border-radius: 2rem;
-                box-shadow: 0 30px 50px -20px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255,255,240,0.2);
-            }
-            /* 交易紀錄區塊固定最大高度，確保整體卡片不超出合理範圍 */
-            .transaction-list {
-                max-height: 280px;
-                overflow-y: auto;
-            }
-        }
-
-        /* 較大桌面可選擇稍微放大但維持固定寬度，更像視窗 */
-        @media (min-width: 1024px) {
-            .piggy-card {
-                width: 520px;
-                max-width: 520px;
-            }
         }
 
         /* 撲滿頭部 icon + 餘額 */
@@ -70,7 +44,6 @@
             color: white;
             border-bottom-left-radius: 1.8rem;
             border-bottom-right-radius: 1.8rem;
-            position: relative;
         }
 
         .pig-icon {
@@ -106,7 +79,7 @@
             margin-right: 4px;
         }
 
-        /* 控制區塊雙欄 (電腦上並排，固定寬度內置) */
+        /* 控制區塊雙欄 (RWD 手機直排但電腦彈性) */
         .action-grid {
             padding: 1.5rem 1.5rem;
             display: flex;
@@ -207,7 +180,7 @@
             transform: scale(0.97);
         }
 
-        /* 交易紀錄區塊 — 在桌面固定可視高度使整體視窗穩定 */
+        /* 交易紀錄區塊 — 視窗高度自動，不固定強制大小 */
         .history-section {
             padding: 0 1.5rem 1.5rem 1.5rem;
         }
@@ -247,17 +220,20 @@
             background: #f9fbfe;
             border-radius: 1.5rem;
             padding: 0.3rem;
-            max-height: 260px;
+            max-height: 320px;      /* 保有舒適高度，但不固定視窗，僅內部滾動 */
             overflow-y: auto;
             box-shadow: inset 0 0 0 1px rgba(0,0,0,0.02), 0 2px 6px rgba(0,0,0,0.05);
         }
         
-        /* 存入 & 取出 不同底色區分 */
+        /* --------------------------
+           收支明細：取出部分底色「加深」，文字反白(白字)  
+           存入保持淺綠底＋深色字，取出強烈對比
+        -------------------------- */
         .tx-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 0.8rem 1rem;
+            padding: 0.85rem 1rem;
             border-radius: 1.2rem;
             margin-bottom: 0.5rem;
             transition: all 0.2s;
@@ -266,16 +242,38 @@
             margin-bottom: 0;
         }
         
-        /* 存入專屬底色 (淡翠綠) */
+        /* 存入底色 (淺翠綠，不反白) */
         .tx-deposit-bg {
             background: rgba(44, 122, 77, 0.12);
             border-left: 4px solid #2c7a4d;
         }
         
-        /* 取出專屬底色 (淡暖橘紅) */
+        /* 取出底色「加深」+ 文字反白 (白色字) 更加突顯 */
         .tx-withdraw-bg {
-            background: rgba(178, 60, 28, 0.1);
-            border-left: 4px solid #b23c1c;
+            background: #b23c1c;          /* 深暖紅棕色，強烈加深背景 */
+            border-left: 4px solid #ffccaa;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* 取出區塊內所有文字預設白色(反白效果)，但保留部分差異 */
+        .tx-withdraw-bg .tx-type,
+        .tx-withdraw-bg .tx-date,
+        .tx-withdraw-bg .tx-amount,
+        .tx-withdraw-bg .tx-type span {
+            color: white !important;
+        }
+        
+        /* 取出區塊 icon 維持可讀 */
+        .tx-withdraw-bg .tx-type span {
+            color: white;
+            text-shadow: 0 0 2px rgba(0,0,0,0.2);
+        }
+        
+        /* 存入維持原本深色字 */
+        .tx-deposit-bg .tx-type,
+        .tx-deposit-bg .tx-date,
+        .tx-deposit-bg .tx-amount {
+            color: #1f2e3a;
         }
         
         .tx-type {
@@ -289,25 +287,36 @@
             color: #1f6e43;
         }
         .type-withdraw {
-            color: #b23c1c;
+            color: #ffffff; /* 雖繼承但明確 */
         }
         .tx-date {
             font-family: monospace;
-            font-size: 0.68rem;
-            color: #5f6c7a;
-            background: rgba(0,0,0,0.02);
-            padding: 0.2rem 0.5rem;
+            font-size: 0.7rem;
+            background: rgba(0,0,0,0.05);
+            padding: 0.2rem 0.6rem;
             border-radius: 30px;
+            font-weight: 500;
         }
+        /* 取出部分的日期背景半透白保持可讀 */
+        .tx-withdraw-bg .tx-date {
+            background: rgba(255, 255, 255, 0.25);
+            color: white;
+        }
+        /* 存入的日期背景 */
+        .tx-deposit-bg .tx-date {
+            background: rgba(0,0,0,0.03);
+            color: #4a627a;
+        }
+        
         .tx-amount {
             font-weight: 800;
-            font-size: 0.85rem;
+            font-size: 0.9rem;
         }
         .deposit-amount-color {
             color: #1f8a4c;
         }
         .withdraw-amount-color {
-            color: #c23d1a;
+            color: #ffffff;   /* 反白金額 */
         }
         .empty-history {
             text-align: center;
@@ -326,7 +335,7 @@
             background: #ffffffd9;
         }
 
-        /* 自定義卷軸讓交易明細美觀 */
+        /* 自定義卷軸 美觀 */
         .transaction-list::-webkit-scrollbar {
             width: 5px;
         }
@@ -339,13 +348,13 @@
             border-radius: 10px;
         }
 
-        @media (max-width: 540px) {
+        @media (max-width: 560px) {
             body { padding: 1rem; }
             .balance-amount { font-size: 2.2rem; }
             .action-grid { flex-direction: column; gap: 1rem; }
             .tx-item { flex-wrap: wrap; gap: 6px; }
             .tx-date { order: 3; margin-left: auto; }
-            .transaction-list { max-height: 220px; }
+            .piggy-card { min-width: 300px; }
         }
     </style>
 </head>
@@ -353,12 +362,12 @@
 
 <div class="piggy-card">
     <div class="hero-section">
-        <div class="pig-icon">🐷💻</div>
+        <div class="pig-icon">🐷✨</div>
         <div class="balance-label">📌 結餘總額</div>
         <div class="balance-amount">
             <span class="currency">$</span><span id="totalBalance">0</span>
         </div>
-        <div style="font-size: 0.65rem; margin-top: 10px; opacity: 0.75;">電子撲滿 · 桌面固定視窗版</div>
+        <div style="font-size: 0.65rem; margin-top: 10px; opacity: 0.75;">電子撲滿 · 突顯取出紀錄(反白)</div>
     </div>
 
     <div class="action-grid">
@@ -399,10 +408,10 @@
         </div>
     </div>
 
-    <!-- 交易歷史記錄 (雙色流水帳) -->
+    <!-- 交易歷史記錄 (雙色流水帳：取出加深 + 文字反白) -->
     <div class="history-section">
         <div class="history-header">
-            <h3>📋 收支明細 <span style="font-size:0.65rem; font-weight:normal;">💚存入｜❤️取出</span></h3>
+            <h3>📋 收支明細 <span style="font-size:0.65rem; font-weight:normal;">💚存入(淺綠)｜🧡取出(深底+白字)</span></h3>
             <button class="clear-btn" id="clearHistoryBtn">🗑️ 清除紀錄</button>
         </div>
         <div class="transaction-list" id="transactionList">
@@ -410,14 +419,14 @@
         </div>
     </div>
     <footer>
-        ⚡ 存/取需設定日期 | 不同底色區分收支 | 固定視窗·桌面體驗
+        ⚡ 存/取需設定日期 | 取出項目「深色底＋白色文字」高度突顯
     </footer>
 </div>
 
 <script>
     // ---------- 資料儲存鍵值 ----------
-    const STORAGE_KEY_BALANCE = 'piggy_balance_desktop';
-    const STORAGE_KEY_TRANSACTIONS = 'piggy_transactions_desktop';
+    const STORAGE_KEY_BALANCE = 'piggy_balance_highlight';
+    const STORAGE_KEY_TRANSACTIONS = 'piggy_transactions_highlight';
 
     // ---------- 全域狀態 ----------
     let currentBalance = 0;
@@ -434,7 +443,7 @@
     const clearHistoryBtn = document.getElementById('clearHistoryBtn');
     const transactionListDiv = document.getElementById('transactionList');
 
-    // 設定預設日期為今天
+    // 設定預設日期為今天 (YYYY-MM-DD)
     function setDefaultDates() {
         const today = new Date();
         const yyyy = today.getFullYear();
@@ -461,6 +470,7 @@
         localStorage.setItem(STORAGE_KEY_TRANSACTIONS, JSON.stringify(transactions));
     }
 
+    // 渲染交易紀錄 — 取出部分採用深底色+白字加強突顯
     function renderTransactions() {
         if (!transactionListDiv) return;
         
@@ -469,21 +479,26 @@
             return;
         }
         
+        // 依照時間倒序 (最新的在上)
         const sorted = [...transactions].sort((a,b) => b.timestamp - a.timestamp);
         
         const itemsHTML = sorted.map(tx => {
             const isDeposit = tx.type === 'deposit';
             const amountFormatted = Number(tx.amount).toLocaleString();
             const typeText = isDeposit ? '存入' : '取出';
-            const typeClass = isDeposit ? 'type-deposit' : 'type-withdraw';
             const dateDisplay = tx.date ? formatDate(tx.date) : '未標註日期';
-            const amountColorClass = isDeposit ? 'deposit-amount-color' : 'withdraw-amount-color';
             const amountSymbol = isDeposit ? '+ ' : '- ';
+            
+            // 根據交易類型給予不同底層 class (取出: 深底 tx-withdraw-bg)
             const bgClass = isDeposit ? 'tx-deposit-bg' : 'tx-withdraw-bg';
             
+            // 金額顏色 class (取出會強制白色，由CSS繼承)
+            const amountColorClass = isDeposit ? 'deposit-amount-color' : 'withdraw-amount-color';
+            
+            // 為確保取出icon也有白色風格，但無須額外處理
             return `
                 <div class="tx-item ${bgClass}">
-                    <div class="tx-type ${typeClass}">
+                    <div class="tx-type ${isDeposit ? 'type-deposit' : 'type-withdraw'}">
                         <span>${isDeposit ? '🐖📥' : '🐖📤'}</span>
                         <span>${typeText}</span>
                     </div>
@@ -512,10 +527,11 @@
             timestamp: Date.now()
         };
         transactions.push(transaction);
-        renderTransactions();
+        renderTransactions();   // 立即重新渲染，取出就會有加深反白效果
         persistData();
     }
 
+    // 存錢主邏輯
     function handleDeposit() {
         let amountRaw = depositAmountInput.value.trim();
         if (amountRaw === "") {
@@ -545,6 +561,7 @@
         showTemporaryMsg(`✅ 存入 $${amount.toLocaleString()} 到撲滿`, '#2c7a4d');
     }
 
+    // 取錢主邏輯
     function handleWithdraw() {
         let amountRaw = withdrawAmountInput.value.trim();
         if (amountRaw === "") {
@@ -576,9 +593,10 @@
         updateBalanceUI();
         addTransaction('withdraw', amount, withdrawDate);
         withdrawAmountInput.value = "";
-        showTemporaryMsg(`🔽 取出 $${amount.toLocaleString()}，已扣除餘額`, '#b23c1c');
+        showTemporaryMsg(`🔽 取出 $${amount.toLocaleString()}，已扣除餘額 (紅底白字)`, '#b23c1c');
     }
     
+    // 簡易浮動提示
     let toastTimeout = null;
     function showTemporaryMsg(message, colorHint) {
         let toast = document.getElementById('dynamicToast');
@@ -613,6 +631,7 @@
         }, 1800);
     }
     
+    // 清除交易紀錄，保留餘額
     function clearHistory() {
         if (transactions.length === 0) {
             showTemporaryMsg('📭 目前收支明細已經是空的', '#5f6c7a');
@@ -627,6 +646,7 @@
         showTemporaryMsg('🧹 收支紀錄已清除，餘額保持不變', '#4a5b6e');
     }
     
+    // 載入儲存資料
     function loadFromStorage() {
         const savedBalance = localStorage.getItem(STORAGE_KEY_BALANCE);
         if (savedBalance !== null && !isNaN(parseFloat(savedBalance))) {
@@ -653,7 +673,7 @@
         
         if (currentBalance < 0) currentBalance = 0;
         updateBalanceUI();
-        renderTransactions();
+        renderTransactions();  // 套用新的突顯樣式
     }
 
     function init() {
@@ -664,10 +684,12 @@
         withdrawBtn.addEventListener('click', handleWithdraw);
         clearHistoryBtn.addEventListener('click', clearHistory);
         
+        // 離開頁面儲存
         window.addEventListener('beforeunload', () => {
             persistData();
         });
         
+        // 鍵盤快捷支援
         depositAmountInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') handleDeposit();
         });
