@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>電子撲滿 | 智能存錢罐 · 雙色流水帳</title>
+    <title>電子撲滿 | 桌面應用版 · 固定視窗大小</title>
     <style>
         * {
             margin: 0;
@@ -18,53 +18,82 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 2rem;
+            padding: 1.5rem;
         }
 
-        /* 主卡片 */
+        /* 主要卡片 — 在電腦上固定視窗大小 (寬度固定，高度自然但限制最大高度) */
         .piggy-card {
-            max-width: 620px;
             width: 100%;
+            max-width: 520px;         /* 手機優先保持最大寬度 */
             background: rgba(255, 255, 255, 0.96);
             backdrop-filter: blur(2px);
-            border-radius: 3rem;
-            box-shadow: 0 25px 45px -12px rgba(0, 0, 0, 0.25), 0 2px 8px rgba(0,0,0,0.03);
+            border-radius: 2.5rem;
+            box-shadow: 0 25px 45px -12px rgba(0, 0, 0, 0.35), 0 2px 8px rgba(0,0,0,0.05);
             overflow: hidden;
             transition: all 0.2s ease;
+            /* 讓卡片在桌面上有固定感 */
+            margin: 0 auto;
+        }
+
+        /* 桌面螢幕 (寬度 >= 640px) 固定視窗大小，更像應用程式 */
+        @media (min-width: 640px) {
+            body {
+                padding: 2rem;
+                background: #cbdbe6;  /* 穩重的桌面背景色 */
+            }
+            .piggy-card {
+                width: 500px;           /* 固定寬度 */
+                max-width: 500px;
+                border-radius: 2rem;
+                box-shadow: 0 30px 50px -20px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255,255,240,0.2);
+            }
+            /* 交易紀錄區塊固定最大高度，確保整體卡片不超出合理範圍 */
+            .transaction-list {
+                max-height: 280px;
+                overflow-y: auto;
+            }
+        }
+
+        /* 較大桌面可選擇稍微放大但維持固定寬度，更像視窗 */
+        @media (min-width: 1024px) {
+            .piggy-card {
+                width: 520px;
+                max-width: 520px;
+            }
         }
 
         /* 撲滿頭部 icon + 餘額 */
         .hero-section {
             background: linear-gradient(135deg, #243b4a 0%, #1b2c38 100%);
-            padding: 2rem 2rem 1.8rem 2rem;
+            padding: 1.8rem 1.8rem 1.5rem 1.8rem;
             text-align: center;
             color: white;
-            border-bottom-left-radius: 2rem;
-            border-bottom-right-radius: 2rem;
+            border-bottom-left-radius: 1.8rem;
+            border-bottom-right-radius: 1.8rem;
             position: relative;
         }
 
         .pig-icon {
-            font-size: 4rem;
-            filter: drop-shadow(0 10px 8px rgba(0,0,0,0.2));
-            margin-bottom: 0.5rem;
+            font-size: 3.8rem;
+            filter: drop-shadow(0 8px 8px rgba(0,0,0,0.2));
+            margin-bottom: 0.3rem;
         }
 
         .balance-label {
             font-weight: 500;
             letter-spacing: 1px;
-            font-size: 1rem;
+            font-size: 0.85rem;
             text-transform: uppercase;
             opacity: 0.8;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.4rem;
         }
 
         .balance-amount {
-            font-size: 3.3rem;
+            font-size: 3rem;
             font-weight: 800;
             background: rgba(255,255,245,0.12);
             display: inline-block;
-            padding: 0.2rem 1.2rem;
+            padding: 0.2rem 1rem;
             border-radius: 60px;
             backdrop-filter: blur(4px);
             font-family: monospace;
@@ -72,39 +101,39 @@
         }
 
         .currency {
-            font-size: 1.5rem;
+            font-size: 1.4rem;
             font-weight: 500;
             margin-right: 4px;
         }
 
-        /* 控制區塊雙欄 (RWD 手機直排) */
+        /* 控制區塊雙欄 (電腦上並排，固定寬度內置) */
         .action-grid {
-            padding: 2rem 1.8rem;
+            padding: 1.5rem 1.5rem;
             display: flex;
             flex-direction: row;
-            gap: 1.5rem;
+            gap: 1.2rem;
             flex-wrap: wrap;
         }
 
         .action-card {
             flex: 1;
             background: #ffffff;
-            border-radius: 1.8rem;
-            padding: 1.2rem 1rem 1.4rem;
-            box-shadow: 0 8px 18px rgba(0, 0, 0, 0.05);
+            border-radius: 1.5rem;
+            padding: 1rem 0.9rem 1.2rem;
+            box-shadow: 0 6px 14px rgba(0, 0, 0, 0.04);
             transition: transform 0.2s, box-shadow 0.2s;
-            border: 1px solid rgba(0,0,0,0.03);
+            border: 1px solid rgba(0,0,0,0.02);
         }
 
         .action-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 14px 26px rgba(0, 0, 0, 0.08);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 20px rgba(0, 0, 0, 0.08);
         }
 
         .action-title {
             font-weight: 700;
-            font-size: 1.2rem;
-            margin-bottom: 1rem;
+            font-size: 1.1rem;
+            margin-bottom: 0.8rem;
             display: flex;
             align-items: center;
             gap: 0.4rem;
@@ -114,7 +143,7 @@
         }
 
         .input-group {
-            margin-bottom: 1rem;
+            margin-bottom: 0.9rem;
         }
 
         .input-group label {
@@ -123,16 +152,16 @@
             font-weight: 600;
             text-transform: uppercase;
             color: #5f6c7a;
-            margin-bottom: 0.3rem;
+            margin-bottom: 0.2rem;
             letter-spacing: 0.5px;
         }
 
         .input-group input {
             width: 100%;
-            padding: 0.7rem 0.8rem;
+            padding: 0.6rem 0.7rem;
             border: 1px solid #e2e8f0;
             border-radius: 1.2rem;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             font-weight: 500;
             transition: all 0.2s;
             background: #fafcff;
@@ -148,14 +177,14 @@
             width: 100%;
             background: #2b3b4e;
             border: none;
-            padding: 0.75rem;
+            padding: 0.65rem;
             border-radius: 2rem;
             font-weight: 700;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             color: white;
             cursor: pointer;
             transition: background 0.2s, transform 0.1s;
-            margin-top: 0.3rem;
+            margin-top: 0.2rem;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -178,19 +207,19 @@
             transform: scale(0.97);
         }
 
-        /* 交易紀錄區塊 */
+        /* 交易紀錄區塊 — 在桌面固定可視高度使整體視窗穩定 */
         .history-section {
-            padding: 0 1.8rem 1.8rem 1.8rem;
+            padding: 0 1.5rem 1.5rem 1.5rem;
         }
         .history-header {
             display: flex;
             justify-content: space-between;
             align-items: baseline;
-            margin-bottom: 1rem;
+            margin-bottom: 0.8rem;
             flex-wrap: wrap;
         }
         .history-header h3 {
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             font-weight: 700;
             color: #1e2f3e;
             display: flex;
@@ -203,7 +232,7 @@
             color: #8c9aa8;
             font-size: 0.7rem;
             font-weight: 500;
-            padding: 0.3rem 1rem;
+            padding: 0.25rem 0.9rem;
             margin-top: 0;
             width: auto;
             background: #f0f3f8;
@@ -218,21 +247,20 @@
             background: #f9fbfe;
             border-radius: 1.5rem;
             padding: 0.3rem;
-            max-height: 300px;
+            max-height: 260px;
             overflow-y: auto;
             box-shadow: inset 0 0 0 1px rgba(0,0,0,0.02), 0 2px 6px rgba(0,0,0,0.05);
         }
         
-        /* 存入 & 取出 不同底色區分 - 核心視覺 */
+        /* 存入 & 取出 不同底色區分 */
         .tx-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 0.9rem 1rem;
+            padding: 0.8rem 1rem;
             border-radius: 1.2rem;
             margin-bottom: 0.5rem;
             transition: all 0.2s;
-            backdrop-filter: blur(2px);
         }
         .tx-item:last-child {
             margin-bottom: 0;
@@ -255,7 +283,7 @@
             align-items: center;
             gap: 8px;
             font-weight: 600;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
         }
         .type-deposit {
             color: #1f6e43;
@@ -265,7 +293,7 @@
         }
         .tx-date {
             font-family: monospace;
-            font-size: 0.7rem;
+            font-size: 0.68rem;
             color: #5f6c7a;
             background: rgba(0,0,0,0.02);
             padding: 0.2rem 0.5rem;
@@ -273,7 +301,7 @@
         }
         .tx-amount {
             font-weight: 800;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
         }
         .deposit-amount-color {
             color: #1f8a4c;
@@ -283,27 +311,41 @@
         }
         .empty-history {
             text-align: center;
-            padding: 2rem;
+            padding: 1.8rem;
             color: #9aaebf;
             font-size: 0.8rem;
             font-weight: 500;
         }
 
         footer {
-            font-size: 0.65rem;
+            font-size: 0.6rem;
             text-align: center;
-            padding: 0.9rem;
+            padding: 0.8rem;
             color: #7e8c9e;
             border-top: 1px solid #eef2f8;
             background: #ffffffd9;
         }
 
-        @media (max-width: 520px) {
+        /* 自定義卷軸讓交易明細美觀 */
+        .transaction-list::-webkit-scrollbar {
+            width: 5px;
+        }
+        .transaction-list::-webkit-scrollbar-track {
+            background: #eef2f8;
+            border-radius: 10px;
+        }
+        .transaction-list::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+
+        @media (max-width: 540px) {
             body { padding: 1rem; }
-            .balance-amount { font-size: 2.4rem; }
-            .action-grid { flex-direction: column; }
+            .balance-amount { font-size: 2.2rem; }
+            .action-grid { flex-direction: column; gap: 1rem; }
             .tx-item { flex-wrap: wrap; gap: 6px; }
             .tx-date { order: 3; margin-left: auto; }
+            .transaction-list { max-height: 220px; }
         }
     </style>
 </head>
@@ -311,12 +353,12 @@
 
 <div class="piggy-card">
     <div class="hero-section">
-        <div class="pig-icon">🐷✨</div>
+        <div class="pig-icon">🐷💻</div>
         <div class="balance-label">📌 結餘總額</div>
         <div class="balance-amount">
             <span class="currency">$</span><span id="totalBalance">0</span>
         </div>
-        <div style="font-size: 0.7rem; margin-top: 12px; opacity: 0.75;">電子撲滿 · 存入/取出不同底色</div>
+        <div style="font-size: 0.65rem; margin-top: 10px; opacity: 0.75;">電子撲滿 · 桌面固定視窗版</div>
     </div>
 
     <div class="action-grid">
@@ -360,7 +402,7 @@
     <!-- 交易歷史記錄 (雙色流水帳) -->
     <div class="history-section">
         <div class="history-header">
-            <h3>📋 收支明細 <span style="font-size:0.7rem; font-weight:normal;">💚存入｜❤️取出</span></h3>
+            <h3>📋 收支明細 <span style="font-size:0.65rem; font-weight:normal;">💚存入｜❤️取出</span></h3>
             <button class="clear-btn" id="clearHistoryBtn">🗑️ 清除紀錄</button>
         </div>
         <div class="transaction-list" id="transactionList">
@@ -368,18 +410,18 @@
         </div>
     </div>
     <footer>
-        ⚡ 存錢 / 取錢需設定日期 | 不同底色區分收支 | 餘額即時更新
+        ⚡ 存/取需設定日期 | 不同底色區分收支 | 固定視窗·桌面體驗
     </footer>
 </div>
 
 <script>
     // ---------- 資料儲存鍵值 ----------
-    const STORAGE_KEY_BALANCE = 'piggy_balance_v2';
-    const STORAGE_KEY_TRANSACTIONS = 'piggy_transactions_v2';
+    const STORAGE_KEY_BALANCE = 'piggy_balance_desktop';
+    const STORAGE_KEY_TRANSACTIONS = 'piggy_transactions_desktop';
 
     // ---------- 全域狀態 ----------
-    let currentBalance = 0;           // 結餘總額 (數字)
-    let transactions = [];            // 交易陣列: { type, amount, date, timestamp }
+    let currentBalance = 0;
+    let transactions = [];
 
     // DOM 元素
     const balanceSpan = document.getElementById('totalBalance');
@@ -392,7 +434,7 @@
     const clearHistoryBtn = document.getElementById('clearHistoryBtn');
     const transactionListDiv = document.getElementById('transactionList');
 
-    // ---------- 輔助函式: 設定預設日期為今天 (YYYY-MM-DD) ----------
+    // 設定預設日期為今天
     function setDefaultDates() {
         const today = new Date();
         const yyyy = today.getFullYear();
@@ -403,7 +445,6 @@
         if (!withdrawDateInput.value) withdrawDateInput.value = todayStr;
     }
 
-    // 格式化顯示日期 (YYYY/MM/DD)
     function formatDate(dateStr) {
         if (!dateStr) return '無日期';
         const parts = dateStr.split('-');
@@ -411,18 +452,15 @@
         return dateStr;
     }
 
-    // 更新 UI 總額顯示
     function updateBalanceUI() {
         balanceSpan.innerText = currentBalance.toLocaleString();
     }
 
-    // 儲存至 localStorage
     function persistData() {
         localStorage.setItem(STORAGE_KEY_BALANCE, currentBalance.toString());
         localStorage.setItem(STORAGE_KEY_TRANSACTIONS, JSON.stringify(transactions));
     }
 
-    // 渲染交易紀錄 ———— 不同底色區分存入/取出 (依照交易類型使用不同 class)
     function renderTransactions() {
         if (!transactionListDiv) return;
         
@@ -431,22 +469,16 @@
             return;
         }
         
-        // 依照時間戳記排序 (最新的在上方)
         const sorted = [...transactions].sort((a,b) => b.timestamp - a.timestamp);
         
         const itemsHTML = sorted.map(tx => {
             const isDeposit = tx.type === 'deposit';
-            // 金額顯示與樣式
             const amountFormatted = Number(tx.amount).toLocaleString();
             const typeText = isDeposit ? '存入' : '取出';
             const typeClass = isDeposit ? 'type-deposit' : 'type-withdraw';
             const dateDisplay = tx.date ? formatDate(tx.date) : '未標註日期';
-            
-            // 金額數字顏色另外控制
             const amountColorClass = isDeposit ? 'deposit-amount-color' : 'withdraw-amount-color';
             const amountSymbol = isDeposit ? '+ ' : '- ';
-            
-            // 關鍵: 根據交易類型綁定不同底色 class
             const bgClass = isDeposit ? 'tx-deposit-bg' : 'tx-withdraw-bg';
             
             return `
@@ -464,10 +496,8 @@
         transactionListDiv.innerHTML = itemsHTML;
     }
 
-    // 新增交易 (存或取)
     function addTransaction(type, amount, dateStr) {
         if (!dateStr || dateStr.trim() === "") {
-            // 如果日期為空，使用今天的日期作為fallback
             const today = new Date();
             const yyyy = today.getFullYear();
             const mm = String(today.getMonth() + 1).padStart(2, '0');
@@ -476,18 +506,16 @@
         }
         
         const transaction = {
-            type: type,          // 'deposit' 或 'withdraw'
+            type: type,
             amount: Number(amount),
             date: dateStr,
             timestamp: Date.now()
         };
         transactions.push(transaction);
-        // 重新渲染 (應用雙底色)
         renderTransactions();
         persistData();
     }
 
-    // 存錢主邏輯
     function handleDeposit() {
         let amountRaw = depositAmountInput.value.trim();
         if (amountRaw === "") {
@@ -510,19 +538,13 @@
             depositDateInput.value = depositDate;
         }
         
-        // 更新餘額
         currentBalance += amount;
         updateBalanceUI();
-        
-        // 新增交易記錄 (存入)
         addTransaction('deposit', amount, depositDate);
-        
-        // 清除存錢金額欄位，方便連續存，保留日期
         depositAmountInput.value = "";
         showTemporaryMsg(`✅ 存入 $${amount.toLocaleString()} 到撲滿`, '#2c7a4d');
     }
 
-    // 取錢主邏輯 (扣除)
     function handleWithdraw() {
         let amountRaw = withdrawAmountInput.value.trim();
         if (amountRaw === "") {
@@ -550,19 +572,13 @@
             withdrawDateInput.value = withdrawDate;
         }
         
-        // 扣除餘額
         currentBalance -= amount;
         updateBalanceUI();
-        
-        // 新增取錢記錄 (取出)
         addTransaction('withdraw', amount, withdrawDate);
-        
-        // 清空取錢金額欄位
         withdrawAmountInput.value = "";
         showTemporaryMsg(`🔽 取出 $${amount.toLocaleString()}，已扣除餘額`, '#b23c1c');
     }
     
-    // 簡易浮動提示 (非干擾)
     let toastTimeout = null;
     function showTemporaryMsg(message, colorHint) {
         let toast = document.getElementById('dynamicToast');
@@ -575,12 +591,12 @@
             toast.style.transform = 'translateX(-50%)';
             toast.style.backgroundColor = '#1e2f3e';
             toast.style.color = 'white';
-            toast.style.padding = '10px 22px';
-            toast.style.borderRadius = '60px';
-            toast.style.fontSize = '0.85rem';
+            toast.style.padding = '8px 18px';
+            toast.style.borderRadius = '40px';
+            toast.style.fontSize = '0.8rem';
             toast.style.fontWeight = '600';
             toast.style.zIndex = '999';
-            toast.style.boxShadow = '0 8px 18px rgba(0,0,0,0.2)';
+            toast.style.boxShadow = '0 6px 14px rgba(0,0,0,0.2)';
             toast.style.backdropFilter = 'blur(8px)';
             toast.style.background = '#2b3b4ecc';
             toast.style.pointerEvents = 'none';
@@ -597,7 +613,6 @@
         }, 1800);
     }
     
-    // 清除所有交易紀錄 (保留餘額)
     function clearHistory() {
         if (transactions.length === 0) {
             showTemporaryMsg('📭 目前收支明細已經是空的', '#5f6c7a');
@@ -606,13 +621,12 @@
         const confirmClear = confirm('⚠️ 清除所有收支明細，但會保留目前結餘總額，確定繼續？');
         if (!confirmClear) return;
         
-        transactions = [];   // 清空交易陣列
+        transactions = [];
         renderTransactions();
-        persistData();      // 儲存空交易 + 保留餘額
+        persistData();
         showTemporaryMsg('🧹 收支紀錄已清除，餘額保持不變', '#4a5b6e');
     }
     
-    // ---------- 初始化 / 載入資料 ----------
     function loadFromStorage() {
         const savedBalance = localStorage.getItem(STORAGE_KEY_BALANCE);
         if (savedBalance !== null && !isNaN(parseFloat(savedBalance))) {
@@ -637,29 +651,23 @@
             transactions = [];
         }
         
-        // 確保餘額不為負數
         if (currentBalance < 0) currentBalance = 0;
         updateBalanceUI();
         renderTransactions();
     }
 
-    // 設定輸入框預設日期 + 監聽頁面加載完畢
     function init() {
         loadFromStorage();
         setDefaultDates();
         
-        // 綁定按鈕事件
         depositBtn.addEventListener('click', handleDeposit);
         withdrawBtn.addEventListener('click', handleWithdraw);
         clearHistoryBtn.addEventListener('click', clearHistory);
         
-        // 離開頁面時儲存
         window.addEventListener('beforeunload', () => {
             persistData();
         });
         
-        // 日期的即時小優化: 如果用戶誤觸清空日期，但點擊存/取時會自動補當天日期
-        // 另外如果金額欄位輸入負數，HTML5 number限制min=1依然可防呆但額外js確保
         depositAmountInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') handleDeposit();
         });
@@ -668,7 +676,6 @@
         });
     }
     
-    // 啟動應用程式
     init();
 </script>
 </body>
