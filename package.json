@@ -1,0 +1,27 @@
+{
+  "name": "electronic-fluttering-sync",
+  "version": "2.0.0",
+  "description": "電子撲滿：OneDrive 同步與離線記帳",
+  "scripts": {
+    "build": "esbuild msal-entry.js --bundle --minify --format=iife --target=es2020 --outfile=vendor/msal.js",
+    "test": "node --test tests/*.test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/panmstw/Electronic-fluttering.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "UNLICENSED",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/panmstw/Electronic-fluttering/issues"
+  },
+  "homepage": "https://github.com/panmstw/Electronic-fluttering#readme",
+  "dependencies": {
+    "@azure/msal-browser": "4.27.0"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2"
+  }
+}

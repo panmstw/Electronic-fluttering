@@ -3,7 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>電子撲滿｜智慧存錢罐 · 突顯取出紀錄</title>
+    <title>電子撲滿</title>
+    <meta name="theme-color" content="#243b4a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="referrer" content="no-referrer">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https:; frame-src https://login.microsoftonline.com; object-src 'none'; base-uri 'self'; form-action 'self' https://login.microsoftonline.com">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    <link rel="stylesheet" href="sync.css">
+    <script src="theme.js"></script>
     <style>
         * {
             margin: 0;
@@ -362,6 +370,7 @@
 
 <div class="piggy-card">
     <div class="hero-section">
+        <button id="themeToggle" class="theme-toggle" aria-label="切換深淺模式">🌙 深色</button>
         <div class="pig-icon">🐷✨</div>
         <div class="balance-label">📌 結餘總額</div>
         <div class="balance-amount">
@@ -370,6 +379,25 @@
         <div style="font-size: 0.65rem; margin-top: 10px; opacity: 0.75;">電子撲滿 · 突顯取出紀錄(反白)</div>
     </div>
 
+    <section class="sync-section" aria-label="雲端同步">
+        <div class="sync-bar"><span id="syncStatus" role="status" aria-live="polite">正在讀取本機帳本…</span><button id="syncNow" class="small-btn">立即同步</button><button id="openSync" class="small-btn" aria-controls="syncSettings">同步設定</button></div>
+        <p id="balanceWarning" class="notice" hidden>多裝置紀錄合併後餘額為負，請檢查收支明細；所有紀錄都已保留。</p>
+        <p id="appError" class="notice" role="alert" hidden></p>
+        <details id="syncSettings">
+            <summary>OneDrive 與資料備份</summary>
+            <p>使用相同的 Microsoft 個人帳號，並在每台裝置選擇同一本雲端帳本。離線時仍可記帳，回到網站且有網路時同步。</p>
+            <div id="clientSetup" class="input-group"><label for="clientId">Microsoft 應用程式識別碼（首次設定）</label><input id="clientId" type="text" autocomplete="off" spellcheck="false" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"><button id="saveClient">儲存連接設定</button><a href="ONEDRIVE-SETUP.md" target="_blank" rel="noopener">查看首次設定說明</a></div>
+            <p id="accountLabel">尚未登入 OneDrive</p>
+            <div class="button-row"><button id="login">登入 OneDrive</button><button id="logout" class="small-btn" hidden>登出</button></div>
+            <div id="cloudControls" hidden>
+                <label for="cloudBooks">雲端帳本</label><select id="cloudBooks"><option value="">請先重新整理帳本</option></select>
+                <div class="button-row"><button id="refreshBooks" class="small-btn">重新整理帳本</button><button id="joinBook">使用選取的雲端帳本</button></div>
+                <button id="createBook">將這台帳本建立為雲端帳本</button>
+                <p class="hint">首次請在資料最完整的裝置建立雲端帳本；其他裝置選擇同一本。切換前會保留本機帳本，不會直接將兩邊餘額相加。</p>
+            </div>
+            <div class="backup-controls"><label for="localBooks">這台裝置保留的帳本</label><select id="localBooks"></select><div class="button-row"><button id="switchLocal" class="small-btn">切換帳本</button><button id="exportBackup" class="small-btn">下載備份</button><button id="importBackup" class="small-btn">匯入備份</button></div><input id="backupFile" type="file" accept=".json,application/json" hidden></div>
+        </details>
+    </section>
     <div class="action-grid">
         <!-- 存錢區塊 -->
         <div class="action-card">
@@ -377,11 +405,11 @@
                 <span>📥</span> 存錢
             </div>
             <div class="input-group">
-                <label>💰 金額 (NTD)</label>
-                <input type="number" id="depositAmount" placeholder="例如: 500" min="1" step="1">
+                <label for="depositAmount">💰 金額 (NTD)</label>
+                <input type="number" inputmode="numeric" id="depositAmount" placeholder="例如: 500" min="1" step="1">
             </div>
             <div class="input-group">
-                <label>📅 存錢日期</label>
+                <label for="depositDate">📅 存錢日期</label>
                 <input type="date" id="depositDate">
             </div>
             <button class="btn-deposit" id="depositBtn">
@@ -395,11 +423,11 @@
                 <span>📤</span> 取錢
             </div>
             <div class="input-group">
-                <label>💸 金額 (NTD)</label>
-                <input type="number" id="withdrawAmount" placeholder="例如: 200" min="1" step="1">
+                <label for="withdrawAmount">💸 金額 (NTD)</label>
+                <input type="number" inputmode="numeric" id="withdrawAmount" placeholder="例如: 200" min="1" step="1">
             </div>
             <div class="input-group">
-                <label>📅 取錢日期</label>
+                <label for="withdrawDate">📅 取錢日期</label>
                 <input type="date" id="withdrawDate">
             </div>
             <button class="btn-withdraw" id="withdrawBtn">
@@ -423,282 +451,8 @@
     </footer>
 </div>
 
-<script>
-    // ---------- 資料儲存鍵值 ----------
-    const STORAGE_KEY_BALANCE = 'piggy_balance_highlight';
-    const STORAGE_KEY_TRANSACTIONS = 'piggy_transactions_highlight';
-
-    // ---------- 全域狀態 ----------
-    let currentBalance = 0;
-    let transactions = [];
-
-    // DOM 元素
-    const balanceSpan = document.getElementById('totalBalance');
-    const depositAmountInput = document.getElementById('depositAmount');
-    const depositDateInput = document.getElementById('depositDate');
-    const withdrawAmountInput = document.getElementById('withdrawAmount');
-    const withdrawDateInput = document.getElementById('withdrawDate');
-    const depositBtn = document.getElementById('depositBtn');
-    const withdrawBtn = document.getElementById('withdrawBtn');
-    const clearHistoryBtn = document.getElementById('clearHistoryBtn');
-    const transactionListDiv = document.getElementById('transactionList');
-
-    // 設定預設日期為今天 (YYYY-MM-DD)
-    function setDefaultDates() {
-        const today = new Date();
-        const yyyy = today.getFullYear();
-        const mm = String(today.getMonth() + 1).padStart(2, '0');
-        const dd = String(today.getDate()).padStart(2, '0');
-        const todayStr = `${yyyy}-${mm}-${dd}`;
-        if (!depositDateInput.value) depositDateInput.value = todayStr;
-        if (!withdrawDateInput.value) withdrawDateInput.value = todayStr;
-    }
-
-    function formatDate(dateStr) {
-        if (!dateStr) return '無日期';
-        const parts = dateStr.split('-');
-        if (parts.length === 3) return `${parts[0]}/${parts[1]}/${parts[2]}`;
-        return dateStr;
-    }
-
-    function updateBalanceUI() {
-        balanceSpan.innerText = currentBalance.toLocaleString();
-    }
-
-    function persistData() {
-        localStorage.setItem(STORAGE_KEY_BALANCE, currentBalance.toString());
-        localStorage.setItem(STORAGE_KEY_TRANSACTIONS, JSON.stringify(transactions));
-    }
-
-    // 渲染交易紀錄 — 取出部分採用深底色+白字加強突顯
-    function renderTransactions() {
-        if (!transactionListDiv) return;
-        
-        if (transactions.length === 0) {
-            transactionListDiv.innerHTML = `<div class="empty-history">🐷 還沒有任何收支紀錄，開始存錢吧！</div>`;
-            return;
-        }
-        
-        // 依照時間倒序 (最新的在上)
-        const sorted = [...transactions].sort((a,b) => b.timestamp - a.timestamp);
-        
-        const itemsHTML = sorted.map(tx => {
-            const isDeposit = tx.type === 'deposit';
-            const amountFormatted = Number(tx.amount).toLocaleString();
-            const typeText = isDeposit ? '存入' : '取出';
-            const dateDisplay = tx.date ? formatDate(tx.date) : '未標註日期';
-            const amountSymbol = isDeposit ? '+ ' : '- ';
-            
-            // 根據交易類型給予不同底層 class (取出: 深底 tx-withdraw-bg)
-            const bgClass = isDeposit ? 'tx-deposit-bg' : 'tx-withdraw-bg';
-            
-            // 金額顏色 class (取出會強制白色，由CSS繼承)
-            const amountColorClass = isDeposit ? 'deposit-amount-color' : 'withdraw-amount-color';
-            
-            // 為確保取出icon也有白色風格，但無須額外處理
-            return `
-                <div class="tx-item ${bgClass}">
-                    <div class="tx-type ${isDeposit ? 'type-deposit' : 'type-withdraw'}">
-                        <span>${isDeposit ? '🐖📥' : '🐖📤'}</span>
-                        <span>${typeText}</span>
-                    </div>
-                    <div class="tx-date">📅 ${dateDisplay}</div>
-                    <div class="tx-amount ${amountColorClass}">${amountSymbol}$${amountFormatted}</div>
-                </div>
-            `;
-        }).join('');
-        
-        transactionListDiv.innerHTML = itemsHTML;
-    }
-
-    function addTransaction(type, amount, dateStr) {
-        if (!dateStr || dateStr.trim() === "") {
-            const today = new Date();
-            const yyyy = today.getFullYear();
-            const mm = String(today.getMonth() + 1).padStart(2, '0');
-            const dd = String(today.getDate()).padStart(2, '0');
-            dateStr = `${yyyy}-${mm}-${dd}`;
-        }
-        
-        const transaction = {
-            type: type,
-            amount: Number(amount),
-            date: dateStr,
-            timestamp: Date.now()
-        };
-        transactions.push(transaction);
-        renderTransactions();   // 立即重新渲染，取出就會有加深反白效果
-        persistData();
-    }
-
-    // 存錢主邏輯
-    function handleDeposit() {
-        let amountRaw = depositAmountInput.value.trim();
-        if (amountRaw === "") {
-            alert("請輸入存錢金額 💰");
-            return;
-        }
-        const amount = Number(amountRaw);
-        if (isNaN(amount) || amount <= 0 || !Number.isInteger(amount)) {
-            alert("金額必須為正整數 (例如: 100, 250)");
-            return;
-        }
-        
-        let depositDate = depositDateInput.value.trim();
-        if (!depositDate) {
-            const today = new Date();
-            const yyyy = today.getFullYear();
-            const mm = String(today.getMonth() + 1).padStart(2, '0');
-            const dd = String(today.getDate()).padStart(2, '0');
-            depositDate = `${yyyy}-${mm}-${dd}`;
-            depositDateInput.value = depositDate;
-        }
-        
-        currentBalance += amount;
-        updateBalanceUI();
-        addTransaction('deposit', amount, depositDate);
-        depositAmountInput.value = "";
-        showTemporaryMsg(`✅ 存入 $${amount.toLocaleString()} 到撲滿`, '#2c7a4d');
-    }
-
-    // 取錢主邏輯
-    function handleWithdraw() {
-        let amountRaw = withdrawAmountInput.value.trim();
-        if (amountRaw === "") {
-            alert("請輸入取錢金額 💸");
-            return;
-        }
-        const amount = Number(amountRaw);
-        if (isNaN(amount) || amount <= 0 || !Number.isInteger(amount)) {
-            alert("金額必須為正整數 (例如: 50, 300)");
-            return;
-        }
-        
-        if (amount > currentBalance) {
-            alert(`餘額不足！目前結餘 $${currentBalance.toLocaleString()}，無法取出 $${amount.toLocaleString()}`);
-            return;
-        }
-        
-        let withdrawDate = withdrawDateInput.value.trim();
-        if (!withdrawDate) {
-            const today = new Date();
-            const yyyy = today.getFullYear();
-            const mm = String(today.getMonth() + 1).padStart(2, '0');
-            const dd = String(today.getDate()).padStart(2, '0');
-            withdrawDate = `${yyyy}-${mm}-${dd}`;
-            withdrawDateInput.value = withdrawDate;
-        }
-        
-        currentBalance -= amount;
-        updateBalanceUI();
-        addTransaction('withdraw', amount, withdrawDate);
-        withdrawAmountInput.value = "";
-        showTemporaryMsg(`🔽 取出 $${amount.toLocaleString()}，已扣除餘額 (紅底白字)`, '#b23c1c');
-    }
-    
-    // 簡易浮動提示
-    let toastTimeout = null;
-    function showTemporaryMsg(message, colorHint) {
-        let toast = document.getElementById('dynamicToast');
-        if (!toast) {
-            toast = document.createElement('div');
-            toast.id = 'dynamicToast';
-            toast.style.position = 'fixed';
-            toast.style.bottom = '24px';
-            toast.style.left = '50%';
-            toast.style.transform = 'translateX(-50%)';
-            toast.style.backgroundColor = '#1e2f3e';
-            toast.style.color = 'white';
-            toast.style.padding = '8px 18px';
-            toast.style.borderRadius = '40px';
-            toast.style.fontSize = '0.8rem';
-            toast.style.fontWeight = '600';
-            toast.style.zIndex = '999';
-            toast.style.boxShadow = '0 6px 14px rgba(0,0,0,0.2)';
-            toast.style.backdropFilter = 'blur(8px)';
-            toast.style.background = '#2b3b4ecc';
-            toast.style.pointerEvents = 'none';
-            toast.style.fontFamily = 'inherit';
-            document.body.appendChild(toast);
-        }
-        toast.style.background = colorHint ? `${colorHint}dd` : '#2b3b4ecc';
-        toast.innerText = message;
-        toast.style.opacity = '1';
-        toast.style.transition = 'opacity 0.2s';
-        if (toastTimeout) clearTimeout(toastTimeout);
-        toastTimeout = setTimeout(() => {
-            toast.style.opacity = '0';
-        }, 1800);
-    }
-    
-    // 清除交易紀錄，保留餘額
-    function clearHistory() {
-        if (transactions.length === 0) {
-            showTemporaryMsg('📭 目前收支明細已經是空的', '#5f6c7a');
-            return;
-        }
-        const confirmClear = confirm('⚠️ 清除所有收支明細，但會保留目前結餘總額，確定繼續？');
-        if (!confirmClear) return;
-        
-        transactions = [];
-        renderTransactions();
-        persistData();
-        showTemporaryMsg('🧹 收支紀錄已清除，餘額保持不變', '#4a5b6e');
-    }
-    
-    // 載入儲存資料
-    function loadFromStorage() {
-        const savedBalance = localStorage.getItem(STORAGE_KEY_BALANCE);
-        if (savedBalance !== null && !isNaN(parseFloat(savedBalance))) {
-            currentBalance = parseFloat(savedBalance);
-        } else {
-            currentBalance = 0;
-        }
-        
-        const savedTransactions = localStorage.getItem(STORAGE_KEY_TRANSACTIONS);
-        if (savedTransactions) {
-            try {
-                const parsed = JSON.parse(savedTransactions);
-                if (Array.isArray(parsed)) {
-                    transactions = parsed;
-                } else {
-                    transactions = [];
-                }
-            } catch(e) {
-                transactions = [];
-            }
-        } else {
-            transactions = [];
-        }
-        
-        if (currentBalance < 0) currentBalance = 0;
-        updateBalanceUI();
-        renderTransactions();  // 套用新的突顯樣式
-    }
-
-    function init() {
-        loadFromStorage();
-        setDefaultDates();
-        
-        depositBtn.addEventListener('click', handleDeposit);
-        withdrawBtn.addEventListener('click', handleWithdraw);
-        clearHistoryBtn.addEventListener('click', clearHistory);
-        
-        // 離開頁面儲存
-        window.addEventListener('beforeunload', () => {
-            persistData();
-        });
-        
-        // 鍵盤快捷支援
-        depositAmountInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') handleDeposit();
-        });
-        withdrawAmountInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') handleWithdraw();
-        });
-    }
-    
-    init();
-</script>
+<script src="config.js"></script>
+<script src="vendor/msal.js"></script>
+<script type="module" src="app.js"></script>
 </body>
 </html>

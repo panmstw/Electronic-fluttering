@@ -1,0 +1,39 @@
+:root { color-scheme:light; }
+:root[data-theme=dark] { color-scheme:dark; }
+body { align-items:flex-start; }
+.piggy-card { width:600px; min-width:0; }
+.hero-section { position:relative; }
+.theme-toggle { position:absolute; z-index:2; right:16px; top:14px; width:auto; padding:8px 12px; font-size:13px; background:#ffffff20; border:1px solid #ffffff35; }
+.sync-section { padding:1rem 1.5rem 0; color:#263b4a; font-size:14px; line-height:1.6; }
+.sync-bar { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+#syncStatus { flex:1 1 160px; overflow-wrap:anywhere; }
+.small-btn { width:auto; padding:8px 12px; background:#eaf0f5; color:#2b3b4e; font-size:13px; }
+.sync-section button { min-height:40px; }
+button:disabled { opacity:.55; cursor:default; }
+button:focus-visible,summary:focus-visible { outline:3px solid #ffb347; outline-offset:3px; }
+details { margin-top:12px; padding:12px; border:1px solid #dce4ed; border-radius:16px; }
+summary { cursor:pointer; font-weight:600; }
+details p { margin:10px 0; }
+details select { width:100%; min-height:42px; padding:8px; border:1px solid #dce4ed; border-radius:10px; background:#fafcff; color:inherit; font-size:14px; }
+details .input-group input { font-size:16px; }
+details .input-group label { font-size:14px; }
+.button-row { display:flex; gap:8px; flex-wrap:wrap; margin:8px 0; }
+.button-row button { flex:1; }
+.hint { font-size:13px; color:#536779; }
+.backup-controls { margin-top:14px; border-top:1px solid #dce4ed; padding-top:14px; }
+.notice { border-radius:12px; padding:10px; margin-top:10px; background:#fff1d1; color:#6c3f00; }
+[hidden] { display:none !important; }
+.action-card { min-width:0; }
+[data-theme=dark] body { background:linear-gradient(145deg,#17212d,#0d141d); }
+[data-theme=dark] .piggy-card,[data-theme=dark] footer { background:#202c39; }
+[data-theme=dark] .action-card { background:#293746; }
+[data-theme=dark] .action-title,[data-theme=dark] .history-header h3,[data-theme=dark] .sync-section { color:#edf3fa; }
+[data-theme=dark] .input-group label,[data-theme=dark] footer,[data-theme=dark] .hint { color:#b8c7d6; }
+[data-theme=dark] .input-group input,[data-theme=dark] select,[data-theme=dark] .transaction-list { background:#172431; border-color:#455666; color:#f0f5fb; }
+[data-theme=dark] .input-group input::placeholder { color:#9caebe; }
+[data-theme=dark] .tx-deposit-bg { background:#254b3b; border-left-color:#72c68f; }
+[data-theme=dark] .tx-deposit-bg .tx-type,[data-theme=dark] .tx-deposit-bg .tx-date,[data-theme=dark] .tx-deposit-bg .tx-amount { color:#e0f5e6; }
+[data-theme=dark] .small-btn,[data-theme=dark] .clear-btn { background:#354657; color:#d6e1eb; }
+[data-theme=dark] details,[data-theme=dark] footer,[data-theme=dark] .backup-controls { border-color:#455666; }
+[data-theme=dark] a { color:#a9d3ff; }
+@media(max-width:560px) { .piggy-card { min-width:0; width:100%; } .sync-section { padding:1rem 1rem 0; } .input-group input { font-size:16px; } }
