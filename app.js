@@ -1,3 +1,4 @@
+import {createTransactionEditor} from './transaction-editor.js';
 import {LedgerStore, UUID} from './ledger.js';
 import {MicrosoftLogin, GraphDrive, CloudSync} from './onedrive.js';
 
@@ -12,6 +13,7 @@ function report(error) {
 function clearError() { $('appError').hidden = true; }
 function today() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
 function applyTheme() { $('themeToggle').textContent = document.documentElement.dataset.theme === 'dark' ? '☀️ 淺色' : '🌙 深色'; }
+const appendActions=createTransactionEditor({store,render,schedule,report,clearError,isBusy:()=>busy || fatal});
 function pending(book) { const ack = new Set(book.meta.acknowledged || []); return book.events.filter(e=>!ack.has(e.id)).length; }
 function render() {
   if (fatal) return;
@@ -28,7 +30,7 @@ function render() {
     const type = document.createElement('div'); type.className='tx-type'; type.textContent=isDeposit ? '📥 存入':'📤 取出';
     const date = document.createElement('div'); date.className='tx-date'; date.textContent=tx.date.replaceAll('-','/');
     const amount = document.createElement('div'); amount.className='tx-amount'; amount.textContent=`${isDeposit ? '+':'−'} $${tx.amount.toLocaleString('zh-TW')}`;
-    row.append(type,date,amount); list.append(row);
+    row.append(type,date,amount); appendActions(row,tx); list.append(row);
   }
   const account=login?.account();
   $('accountLabel').textContent=account ? `已登入：${account.username || account.name || 'Microsoft 帳號'}`:'尚未登入 OneDrive';

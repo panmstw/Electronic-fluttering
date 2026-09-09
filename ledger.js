@@ -26,12 +26,15 @@ export function validateEvent(event, ledgerId) {
   if (event.kind === 'transaction') validateTransaction(event);
   else if (event.kind === 'clear') {
     if (!Array.isArray(event.hiddenIds) || event.hiddenIds.some(id => typeof id !== 'string' || !/^(legacy-\d+|[0-9a-f-]{36})$/.test(id))) throw Error('清除紀錄格式有誤。');
-  } else throw Error('未知的同步紀錄類型。');
+  } else if (['edit','delete'].includes(event.kind)) {
+    if (typeof event.targetId !== 'string' || !/^(legacy-\d+|[0-9a-f-]{36})$/.test(event.targetId) || !safe(event.revision) || event.revision < 1) throw Error('修改紀錄格式有誤。');
+    if (event.kind === 'edit') validateTransaction(event);
+  } else throw Error('未知的同步紀錄類型，請更新電子撲滿後再同步。');
   return event;
 }
 export function snapshot(seed, events) {
   validateSeed(seed);
-  let balance = seed.balance;
+  let balance = BigInt(seed.balance);
   const tx = new Map(seed.transactions.map(t => [t.id, t]));
   const seen = new Map(), hidden = new Set();
   for (const e of events) {
@@ -42,14 +45,33 @@ export function snapshot(seed, events) {
     }
     seen.set(e.id, e);
     if (e.kind === 'clear') e.hiddenIds.forEach(id => hidden.add(id));
-    else {
+    else if (e.kind === 'transaction') {
       if (tx.has(e.id)) throw Error('收支識別碼重複。');
-      balance += e.type === 'deposit' ? e.amount : -e.amount;
-      if (!safe(balance)) throw Error('金額超過可安全計算的範圍。');
+      balance += BigInt(e.type === 'deposit' ? e.amount : -e.amount);
       tx.set(e.id, e);
     }
   }
-  return {balance, transactions: [...tx.values()].filter(t => !hidden.has(t.id))
+  const edits = new Map(), deleted = new Set();
+  for (const e of seen.values()) {
+    if (!['edit','delete'].includes(e.kind)) continue;
+    if (!tx.has(e.targetId)) throw Error('修改所需的原始紀錄尚未完整下載，請稍後再同步。');
+    if (e.kind === 'delete') deleted.add(e.targetId);
+    else {
+      const previous = edits.get(e.targetId);
+      if (!previous || e.revision > previous.revision || (e.revision === previous.revision && e.id > previous.id)) edits.set(e.targetId, e);
+    }
+  }
+  const signed = t => BigInt(t.type === 'deposit' ? t.amount : -t.amount);
+  for (const [id, original] of tx) {
+    if (deleted.has(id)) { balance -= signed(original); tx.delete(id); }
+    else if (edits.has(id)) {
+      const e = edits.get(id);
+      balance += signed(e) - signed(original);
+      tx.set(id, {...original, type:e.type, amount:e.amount, date:e.date});
+    }
+  }
+  if (balance > BigInt(Number.MAX_SAFE_INTEGER) || balance < BigInt(Number.MIN_SAFE_INTEGER)) throw Error('金額超過可安全計算的範圍。');
+  return {balance:Number(balance), transactions: [...tx.values()].filter(t => !hidden.has(t.id))
     .sort((a, b) => b.timestamp - a.timestamp || b.id.localeCompare(a.id))};
 }
 
@@ -112,6 +134,19 @@ export class LedgerStore {
     snapshot(book.seed, [...book.events, event]);
     this.write(`event:${book.seed.id}:${event.id}`, event);
   }
+  change(targetId, kind, fields = {}, expected = null) {
+    const book = this.get(), current = book.transactions.find(t => t.id === targetId);
+    if (!current) throw Error('這筆紀錄已刪除或清除，請查看最新帳本。');
+    if (expected && (expected.ledgerId !== book.seed.id || ['type','amount','date'].some(k => expected[k] !== current[k]))) throw Error('帳本或這筆紀錄已變更，請重新開啟修改。');
+    if (!['edit','delete'].includes(kind)) throw Error('無效的操作。');
+    const revision = 1 + Math.max(0,...book.events.filter(e => e.targetId === targetId).map(e => e.revision));
+    const event = {schema:'piggy-event-v2', ledgerId:book.seed.id, id:this.uuid(), kind, targetId, revision, timestamp:this.now()};
+    if (kind === 'edit') Object.assign(event, {type:fields.type, amount:fields.amount, date:fields.date});
+    snapshot(book.seed,[...book.events,event]);
+    this.write(`event:${book.seed.id}:${event.id}`,event);
+  }
+  edit(id, fields, expected) { this.change(id,'edit',fields,expected); }
+  remove(id, expected) { this.change(id,'delete',{},expected); }
   clear() {
     const book = this.get();
     if (!book.transactions.length) return;

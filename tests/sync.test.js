@@ -136,3 +136,43 @@ test('Mac v1 JSON backup can be imported with balance intact',()=>{
   assert.equal(a.get().balance,400);assert.equal(a.get().transactions.length,2);
   assert.equal(snapshot(a.get().seed,[]).balance,400);
 });
+
+test('edit and delete legacy entries adjust independent balance, preserve seed and original timestamp',()=>{
+ const a=local(300,[tx('deposit',500),tx('withdraw',200)]); const original=clone(a.get().seed);
+ a.edit('legacy-0',{type:'withdraw',amount:50,date:'2026-09-09'});
+ assert.equal(a.get().balance,-250);assert.equal(a.get().transactions.find(t=>t.id==='legacy-0').timestamp,original.transactions[0].timestamp);
+ a.remove('legacy-0');assert.equal(a.get().balance,-200);assert.deepEqual(a.get().seed,original);
+ assert.throws(()=>a.remove('legacy-0'));
+});
+test('date-only edits do not change balance and stale editors cannot overwrite another edit',()=>{
+ const a=local(300,[tx('deposit',100)]);const old={...a.get().transactions[0],ledgerId:a.activeId()};
+ a.edit(old.id,{type:'deposit',amount:100,date:'2026-09-09'},old);assert.equal(a.get().balance,300);
+ assert.throws(()=>a.edit(old.id,{type:'deposit',amount:200,date},old),/已變更/);
+ const n=a.get().events.length;
+ assert.throws(()=>a.edit(old.id,{type:'deposit',amount:0,date}));
+ assert.throws(()=>a.edit(old.id,{type:'deposit',amount:2,date:'2026-02-30'}));assert.equal(a.get().events.length,n);
+});
+test('concurrent edits converge without double applying balance adjustments, then causal edit wins',async()=>{
+ const {a,b,ca,cb}=await pair();a.add('deposit',100,date);await ca.sync();await cb.sync();const id=a.get().transactions[0].id;
+ a.edit(id,{type:'deposit',amount:200,date});b.edit(id,{type:'withdraw',amount:50,date});
+ await ca.sync();await cb.sync();await ca.sync();assert.equal(a.get().balance,b.get().balance);
+ assert([1200,950].includes(a.get().balance));
+ b.edit(id,{type:'deposit',amount:350,date});await cb.sync();await ca.sync();assert.equal(a.get().balance,1350);
+ assert.deepEqual(snapshot(a.get().seed,[...a.get().events].reverse()),snapshot(a.get().seed,a.get().events));
+});
+test('delete wins over concurrent edits and retries across two devices',async()=>{
+ const {a,b,ca,cb}=await pair();a.add('withdraw',100,date);await ca.sync();await cb.sync();const id=a.get().transactions[0].id;
+ a.remove(id);b.edit(id,{type:'withdraw',amount:200,date});await ca.sync();await cb.sync();await ca.sync();await cb.sync();
+ assert.equal(a.get().balance,1000);assert.equal(b.get().balance,1000);assert.equal(b.get().transactions.length,0);
+});
+test('clear concurrent with edit hides detail but retains corrected balance',async()=>{
+ const {a,b,ca,cb}=await pair();a.add('deposit',100,date);await ca.sync();await cb.sync();const id=a.get().transactions[0].id;
+ a.clear();b.edit(id,{type:'deposit',amount:250,date});await ca.sync();await cb.sync();await ca.sync();
+ assert.equal(a.get().balance,1250);assert.equal(a.get().transactions.length,0);
+});
+test('missing transaction dependency rejects entire merge and duplicate events stay idempotent',()=>{
+ const a=local();a.add('deposit',100,date);const id=a.get().transactions[0].id;a.edit(id,{type:'deposit',amount:200,date});
+ const book=a.get();assert.equal(snapshot(book.seed,[...book.events,...book.events]).balance,200);
+ const b=local();const before=b.storage.data.size;
+ assert.throws(()=>b.merge(book.seed,[book.events.find(e=>e.kind==='edit')]),/尚未完整/);assert.equal(b.storage.data.size,before);
+});
