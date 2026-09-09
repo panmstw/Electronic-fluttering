@@ -100,6 +100,18 @@ export class GraphDrive {
 
 export class CloudSync {
   constructor(store, drive, owner) { this.store = store; this.drive = drive; this.owner = owner; this.running = null; }
+  async deleteCloudBook(id) {
+    const book=this.store.get(id),remote=book.meta.remote;
+    if(!remote || remote.owner!==this.owner)throw Error('請登入此雲端帳本的原帳號。');
+    const root=await this.drive.root();
+    if(root.id!==remote.rootId)throw Error('OneDrive 資料夾已改變，未刪除。');
+    try {
+      const seed=await this.drive.seed(remote.folderId);
+      if(JSON.stringify(seed)!==JSON.stringify(book.seed))throw Error('雲端帳本資料不一致，未刪除。');
+      await this.drive.request(`/me/drive/items/${encode(remote.folderId)}`,{method:'DELETE'});
+    } catch(error) {if(error.status!==404)throw error;}
+    this.store.deleteBook(id);
+  }
   async create(id = this.store.activeId()) {
     const book = this.store.get(id);
     if (book.meta.remote) throw Error('此帳本已連接雲端，請使用立即同步。');

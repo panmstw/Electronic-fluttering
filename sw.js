@@ -1,5 +1,5 @@
-const CACHE = 'piggy-cloud-v2-20260909-21';
-const FILES = ['./','./index.html','./app.js','./transaction-editor.js','./ledger.js','./onedrive.js','./theme.js','./sync.css','./config.js','./vendor/msal.js','./manifest.webmanifest','./icons/icon-192.png','./icons/icon-512.png'];
+const CACHE = 'piggy-cloud-v2-20260909-22';
+const FILES = ['./','./index.html','./app.js','./transaction-editor.js','./backup-manager.js','./ledger.js','./onedrive.js','./theme.js','./sync.css','./config.js','./vendor/msal.js','./manifest.webmanifest','./icons/icon-192.png','./icons/icon-512.png'];
 const allowed = new Set(FILES.map(path=>new URL(path,self.registration.scope).pathname));
 self.addEventListener('install',event=>{
   event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(FILES)));

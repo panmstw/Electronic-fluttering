@@ -54,3 +54,8 @@ details .input-group label { font-size:14px; }
 [data-theme="dark"] .transaction-editor { background:#17212d; color:#f1f5f9; }
 [data-theme="dark"] .transaction-editor input,[data-theme="dark"] .transaction-editor select { background:#263548; color:#f1f5f9; }
 [data-theme="dark"] .edit-error { color:#fca5a5; }
+
+.backup-manager {margin-top:20px;padding-top:16px;border-top:1px solid #94a3b8;}
+.backup-manager .button-row {flex-wrap:wrap;}
+.backup-manager select {max-width:100%;width:100%;}
+.backup-manager input[type="checkbox"] {width:auto;display:inline;}

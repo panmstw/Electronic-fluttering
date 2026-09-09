@@ -1,6 +1,6 @@
 {
   "name": "electronic-fluttering-sync",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "電子撲滿：OneDrive 同步與離線記帳",
   "scripts": {
     "build": "esbuild msal-entry.js --bundle --minify --format=iife --target=es2020 --outfile=vendor/msal.js",

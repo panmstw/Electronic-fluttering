@@ -1,3 +1,4 @@
+import {createBackupManager} from './backup-manager.js';
 import {createTransactionEditor} from './transaction-editor.js';
 import {LedgerStore, UUID} from './ledger.js';
 import {MicrosoftLogin, GraphDrive, CloudSync} from './onedrive.js';
@@ -13,6 +14,7 @@ function report(error) {
 function clearError() { $('appError').hidden = true; }
 function today() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
 function applyTheme() { $('themeToggle').textContent = document.documentElement.dataset.theme === 'dark' ? '☀️ 淺色' : '🌙 深色'; }
+const backupManager=createBackupManager({store,run,render,schedule,report,getCloud:()=>cloud,refreshBooks});
 const appendActions=createTransactionEditor({store,render,schedule,report,clearError,isBusy:()=>busy || fatal});
 function pending(book) { const ack = new Set(book.meta.acknowledged || []); return book.events.filter(e=>!ack.has(e.id)).length; }
 function render() {
@@ -36,7 +38,7 @@ function render() {
   $('accountLabel').textContent=account ? `已登入：${account.username || account.name || 'Microsoft 帳號'}`:'尚未登入 OneDrive';
   $('logout').hidden=!account; $('cloudControls').hidden=!account;
   $('syncNow').disabled=busy || !cloud || !book.meta.remote || !navigator.onLine;
-  for (const id of settingsButtons) $(id).disabled=busy;
+  for (const id of [...settingsButtons,'depositBtn','withdrawBtn','clearHistoryBtn']) $(id).disabled=busy;
   $('login').disabled=busy || !login?.instance;
   $('createBook').disabled=busy || !!book.meta.remote;
   let status='僅此裝置 · 已自動儲存';
@@ -57,6 +59,8 @@ function render() {
     $('localBooks').append(option);
   }
   $('localBooks').value = [...$('localBooks').options].some(o=>o.value===selected) ? selected : book.seed.id;
+  $('localBooks').disabled=busy;
+  backupManager.refresh(busy);
 }
 async function run(task) {
   if (busy || fatal) return;
@@ -104,7 +108,7 @@ try { store.init(); render(); } catch(error) {
 $('depositDate').value=today(); $('withdrawDate').value=today(); applyTheme();
 for (const kind of ['deposit','withdraw']) {
   function record() {
-    if (fatal) return;
+    if (fatal || busy) return;
     try {
       store.add(kind,Number($(kind+'Amount').value),$(kind+'Date').value || today());
       $(kind+'Amount').value=''; clearError(); render(); schedule();
@@ -151,6 +155,7 @@ $('switchLocal').addEventListener('click',()=>{
 $('exportBackup').addEventListener('click',()=>{
   try {
     const data=store.export($('localBooks').value || store.activeId());
+    store.saveBackup(data,'下載備份');render();
     const url=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));
     const a=document.createElement('a'); a.href=url;a.download=`電子撲滿備份-${today()}.json`;a.click();
     setTimeout(()=>URL.revokeObjectURL(url),30000);
@@ -160,10 +165,7 @@ $('importBackup').addEventListener('click',()=>$('backupFile').click());
 $('backupFile').addEventListener('change',async()=>{
   const file=$('backupFile').files[0]; if (!file) return;
   try {
-    if (file.size>10*1024*1024) throw Error('備份檔超過 10 MB，未匯入。');
-    const data=JSON.parse(await file.text());
-    if (!confirm('將備份匯入為另一個本機帳本？目前帳本會保留，雲端內容不會被覆寫。')) return;
-    store.create(data);clearError();render();
+    await backupManager.importFile(file);
   } catch(error) { report(error); }
   finally {$('backupFile').value='';}
 });

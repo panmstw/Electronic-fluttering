@@ -176,3 +176,53 @@ test('missing transaction dependency rejects entire merge and duplicate events s
  const b=local();const before=b.storage.data.size;
  assert.throws(()=>b.merge(book.seed,[book.events.find(e=>e.kind==='edit')]),/尚未完整/);assert.equal(b.storage.data.size,before);
 });
+
+MemoryStorage.prototype.removeItem=function(k){if(this.fail)throw Error('Quota exceeded');this.data.delete(k);};
+test('restore replaces balance and rows, preserves cloud identity, autosaves previous state and synchronizes',async()=>{
+ const {a,b,ca,cb}=await pair();a.add('deposit',10,date);await ca.sync();await cb.sync();
+ const id=a.activeId(),remote=clone(a.get().meta.remote);
+ await a.importInto({balance:250,transactions:[tx('withdraw',50)]},'replace');
+ assert.equal(a.activeId(),id);assert.deepEqual(a.get().meta.remote,remote);assert.equal(a.backups()[0].data.balance,1010);
+ await ca.sync();await cb.sync();assert.equal(b.get().balance,250);assert.equal(b.get().transactions.length,1);
+ const entry=b.get().transactions[0];b.edit(entry.id,{type:'withdraw',amount:70,date});await cb.sync();await ca.sync();assert.equal(a.get().balance,230);
+});
+test('restore retains unseen offline additions and wins over edits to replaced rows',async()=>{
+ const {a,b,ca,cb}=await pair();a.add('deposit',100,date);await ca.sync();await cb.sync();const old=b.get().transactions[0].id;
+ await a.importInto({balance:20,transactions:[]},'replace');b.edit(old,{type:'deposit',amount:900,date});b.add('deposit',30,date);
+ await ca.sync();await cb.sync();await ca.sync();assert.equal(a.get().balance,50);assert.equal(b.get().balance,50);
+});
+test('merge skips duplicate rows, keeps independent balance and is idempotent',async()=>{
+ const a=local(300,[tx('deposit',100)]),data={balance:9000,transactions:[tx('deposit',100),tx('deposit',100),tx('withdraw',20)]};
+ assert.equal(a.previewImport(data,'merge').added,2);await a.importInto(data,'merge');assert.equal(a.get().balance,380);
+ assert.equal(a.get().transactions.length,3);await a.importInto(data,'merge');assert.equal(a.get().balance,380);
+});
+test('simultaneous overlapping merges converge once, different rows both survive',async()=>{
+ const {a,b,ca,cb}=await pair();
+ await a.importInto({balance:0,transactions:[tx('deposit',100),tx('withdraw',10)]},'merge');
+ await b.importInto({balance:0,transactions:[tx('deposit',100),tx('withdraw',20)]},'merge');
+ await ca.sync();await cb.sync();await ca.sync();assert.equal(a.get().balance,1070);assert.equal(b.get().balance,1070);assert.equal(a.get().transactions.length,3);
+});
+test('concurrent restores deterministically choose one, later restore supersedes both',async()=>{
+ const {a,b,ca,cb}=await pair();await a.importInto({balance:10,transactions:[]},'replace');await b.importInto({balance:20,transactions:[]},'replace');
+ await ca.sync();await cb.sync();await ca.sync();assert.equal(a.get().balance,b.get().balance);assert([10,20].includes(a.get().balance));
+ await b.importInto({balance:40,transactions:[]},'replace');await cb.sync();await ca.sync();assert.equal(a.get().balance,40);
+});
+test('failed automatic backup prevents replacement, invalid imports leave book unchanged',async()=>{
+ const a=local(100);a.storage.fail=true;await assert.rejects(a.importInto({balance:0,transactions:[]},'replace'));assert.equal(a.get().balance,100);
+ a.storage.fail=false;await assert.rejects(a.importInto({balance:0,transactions:[{}]},'replace'));assert.equal(a.get().balance,100);
+});
+test('backup deletion leaves ledger intact; active and last local book deletion keeps usable state',()=>{
+ const a=local(100),id=a.saveBackup();assert.equal(a.backups().length,1);a.deleteBackup(id);assert.equal(a.backups().length,0);assert.equal(a.get().balance,100);
+ const old=a.activeId();a.deleteBook(old);assert.notEqual(a.activeId(),old);assert.equal(a.get().balance,0);assert.equal(a.list().length,1);assert.equal(a.read('seed:'+old),null);
+});
+test('cloud deletion checks owner, handles failure without local loss, then removes selected folder only',async()=>{
+ const {a,ca,drive}=await pair();const id=a.activeId(),folder=a.get().meta.remote.folderId;
+ await assert.rejects(new CloudSync(a,drive,'other').deleteCloudBook(id));assert.equal(a.activeId(),id);
+ drive.request=async()=>{throw Error('offline');};await assert.rejects(ca.deleteCloudBook(id));assert.equal(a.activeId(),id);
+ drive.request=async(path,options)=>{assert.equal(options.method,'DELETE');assert.equal(path,'/me/drive/items/'+folder);for(const k of drive.files.keys())if(k.startsWith(folder+'/'))drive.files.delete(k);return null;};
+ await ca.deleteCloudBook(id);assert.notEqual(a.activeId(),id);assert.equal(a.get().balance,0);assert.equal(drive.files.size,0);
+});
+test('merge preview matches result after deleting a previously imported row',async()=>{
+ const a=local(0),data={balance:100,transactions:[tx('deposit',100)]};await a.importInto(data,'merge');a.remove(a.get().transactions[0].id);
+ assert.equal(a.previewImport(data,'merge').added,0);assert.equal(a.previewImport(data,'merge').balance,0);await a.importInto(data,'merge');assert.equal(a.get().balance,0);
+});
